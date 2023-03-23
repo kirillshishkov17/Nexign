@@ -6,6 +6,6 @@ public class Main {
         List<String> data = ReadDataToArray.readData("src/main/resources/cdr.txt");
 
         // Находим совпадения по строке
-        ReportGenerator.generate(data, "73160252296");
+        ReportGenerator.generate(data, "71747641686");
     }
 }

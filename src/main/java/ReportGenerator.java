@@ -9,9 +9,13 @@ import java.util.regex.Pattern;
 
 public class ReportGenerator {
 
-    private static int globalTime = 0; // Общее время звонков за тарифный период
+    private static int globalTime = 0;            // Общее время звонков за тарифный период в секундах
+    private static double totalPrice;             // Общая стоимость звонков за тарифный период
+    private static String tariff;                 // Тариф абонента
 
     public static void generate(List<String> data, String phoneNumber) {
+
+        // Получение данных определённого абонента
         ArrayList<String> matches = new ArrayList<>();
         Pattern p = Pattern.compile(".{4}" + phoneNumber + ".+");
 
@@ -20,6 +24,9 @@ public class ReportGenerator {
                 matches.add(s);
             }
         }
+
+        // Получение тарифа абонента
+        tariff = stringToArrayOfStrings(matches, 0)[4];
 
         for (int i = 0; i < matches.size(); i++) {
             String[] elements = stringToArrayOfStrings(matches, i);
@@ -39,15 +46,32 @@ public class ReportGenerator {
             long duration = Duration.between(startTime, endTime).toSeconds();
             globalTime += duration;
 
-            // Получение тарифа звонка
-            String tariff = elements[4];
+            // Получение стоимости звонка
+            double price = 0;
+
+            if (tariff.equals("06")) {
+                // Если потрачено менее 300 минут
+                if (globalTime/60 <= 50) {
+                    price = 0;
+                }
+
+                // Если во время данного звонка был преодалён порог в 300 минут
+                if ((globalTime - duration)/60 <= 50 && globalTime/60 > 50) {
+                    price = globalTime/60 - 50;
+                }
+
+                // Если звонок происходит после израсходования 300 минут
+                if (globalTime/60 > 50) {
+                    price = (double) duration/60;
+                }
+            }
+            System.out.println(price);
 
 //            // Блок проверки
 //            System.out.println("Start: " + startTime);
 //            System.out.println("End: " + endTime);
 //            System.out.println(duration);
         }
-        System.out.println(globalTime/60);
     }
 
     private static String[] stringToArrayOfStrings(ArrayList<String> array, int index) {
