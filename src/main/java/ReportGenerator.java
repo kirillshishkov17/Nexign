@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -27,6 +28,9 @@ public class ReportGenerator {
             }
         }
 
+        swapTimeAndCallType(matches);
+        Collections.sort(matches);
+
         // Получение тарифа абонента
         String tariff = stringToArrayOfStrings(matches, 0)[4];
 
@@ -45,10 +49,10 @@ public class ReportGenerator {
             String[] elements = stringToArrayOfStrings(matches, i);
 
             // Получение типа звонка
-            String callType = elements[0];
+            String callType = elements[2];
 
             // Получение времени начала звонка
-            LocalDateTime startTime = convertDate(elements[2]);
+            LocalDateTime startTime = convertDate(elements[0]);
             String startTimeString = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(startTime);
 
             // Получение времени окончания звонка
@@ -126,5 +130,19 @@ public class ReportGenerator {
         LocalDate localDate = LocalDate.parse(date, formatter);
         LocalTime localTime = LocalTime.parse(date, formatter);
         return LocalDateTime.of(localDate, localTime);
+    }
+
+    private static void swapTimeAndCallType (ArrayList<String> array) {
+        for (int i = 0; i < array.size(); i++) {
+            StringBuilder sb = new StringBuilder(array.get(i));
+            String callType = sb.substring(0,4);
+            sb.delete(0, 4);
+            String startTime = sb.substring(13,29);
+            sb.delete(13,29);
+            sb.insert(0, startTime);
+            sb.insert(29, callType);
+            array.set(i, sb.toString());
+            System.out.println(array.get(i));
+        }
     }
 }
