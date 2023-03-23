@@ -1,3 +1,7 @@
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -51,26 +55,36 @@ public class ReportGenerator {
 
             if (tariff.equals("06")) {
                 // Если потрачено менее 300 минут
-                if (globalTime/60 <= 50) {
+                if (globalTime/60 <= 300) {
                     price = 0;
                 }
 
                 // Если во время данного звонка был преодалён порог в 300 минут
-                if ((globalTime - duration)/60 <= 50 && globalTime/60 > 50) {
-                    price = globalTime/60 - 50;
+                if ((globalTime - duration)/60 <= 300 && globalTime/60 > 300) {
+                    price = globalTime/60 - 300;
                 }
 
                 // Если звонок происходит после израсходования 300 минут
-                if (globalTime/60 > 50) {
+                if (globalTime/60 > 300) {
                     price = (double) duration/60;
                 }
             }
-            System.out.println(price);
 
-//            // Блок проверки
-//            System.out.println("Start: " + startTime);
-//            System.out.println("End: " + endTime);
-//            System.out.println(duration);
+            if (tariff.equals("03")) {
+                price = (double) duration/60 * 1.5;
+            }
+
+            if (tariff.equals("11")) {
+                if (callType.equals("02")) {
+                    price = 0;
+                } else {
+                    if (globalTime/60 <= 100) {
+                        price = (double) duration/60 * 0.5;
+                    } else {
+                        price = (double) duration/60 * 1;
+                    }
+                }
+            }
         }
     }
 
