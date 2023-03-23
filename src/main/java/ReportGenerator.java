@@ -1,4 +1,3 @@
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
@@ -13,11 +12,10 @@ import java.util.regex.Pattern;
 
 public class ReportGenerator {
 
-    private static int globalTime = 0;            // Общее время звонков за тарифный период в секундах
+    private static double globalTime = 0;         // Общее время звонков за тарифный период в секундах
     private static double totalPrice;             // Общая стоимость звонков за тарифный период
-    private static String tariff;                 // Тариф абонента
 
-    public static void generate(List<String> data, String phoneNumber) {
+    public static void generate(List<String> data, String phoneNumber) throws IOException {
 
         // Получение данных определённого абонента
         ArrayList<String> matches = new ArrayList<>();
@@ -30,7 +28,18 @@ public class ReportGenerator {
         }
 
         // Получение тарифа абонента
-        tariff = stringToArrayOfStrings(matches, 0)[4];
+        String tariff = stringToArrayOfStrings(matches, 0)[4];
+
+        // Начало создания файла отчёта
+            PrintWriter writer = new PrintWriter("./reports/" + phoneNumber + ".txt", StandardCharsets.UTF_8);
+            writer.println("Tariff index: " + tariff);
+            writer.println("----------------------------------------------------------------------------");
+            writer.println("Report for phone number " + phoneNumber + ":");
+            writer.println("----------------------------------------------------------------------------");
+            writer.println("| Call Type |   Start Time        |     End Time        | Duration | Cost  |");
+            writer.println("----------------------------------------------------------------------------");
+
+
 
         for (int i = 0; i < matches.size(); i++) {
             String[] elements = stringToArrayOfStrings(matches, i);
@@ -48,6 +57,7 @@ public class ReportGenerator {
 
             // Получение длительности звонка
             long duration = Duration.between(startTime, endTime).toSeconds();
+            String durationString = String.format("%02d:%02d:%02d", duration / 3600, duration / 60 % 60, duration % 60);
             globalTime += duration;
 
             // Получение стоимости звонка
@@ -57,25 +67,30 @@ public class ReportGenerator {
                 // Если потрачено менее 300 минут
                 if (globalTime/60 <= 300) {
                     price = 0;
-                }
-
-                // Если во время данного звонка был преодалён порог в 300 минут
-                if ((globalTime - duration)/60 <= 300 && globalTime/60 > 300) {
-                    price = globalTime/60 - 300;
+                    totalPrice = 100;
                 }
 
                 // Если звонок происходит после израсходования 300 минут
                 if (globalTime/60 > 300) {
                     price = (double) duration/60;
+                    totalPrice += price;
+                }
+
+                // Если во время данного звонка был преодалён порог в 300 минут
+                if ((globalTime - duration)/60 <= 300 && globalTime/60 > 300) {
+                    price = (globalTime / 60) - 300;
+                    totalPrice = (double) 100 + price;
                 }
             }
 
             if (tariff.equals("03")) {
                 price = (double) duration/60 * 1.5;
+                totalPrice += price;
             }
 
             if (tariff.equals("11")) {
                 if (callType.equals("02")) {
+                    globalTime -= duration;
                     price = 0;
                 } else {
                     if (globalTime/60 <= 100) {
@@ -83,9 +98,17 @@ public class ReportGenerator {
                     } else {
                         price = (double) duration/60 * 1;
                     }
+                    totalPrice += price;
                 }
             }
+            writer.println("|     "+ callType +"    | "+ startTimeString +" | "+ endTimeString + " | " + durationString + " |  "
+                    + String.format("%(.2f", price).replace(",", ".") +" |");
+            writer.println("----------------------------------------------------------------------------");
         }
+
+        writer.println("|                                           Total Cost: |     " + String.format("%(.2f", totalPrice).replace(",", ".") + " rubles |");
+        writer.println("----------------------------------------------------------------------------");
+        writer.close();
     }
 
     private static String[] stringToArrayOfStrings(ArrayList<String> array, int index) {
@@ -102,7 +125,6 @@ public class ReportGenerator {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
         LocalDate localDate = LocalDate.parse(date, formatter);
         LocalTime localTime = LocalTime.parse(date, formatter);
-        LocalDateTime time = LocalDateTime.of(localDate, localTime);
-        return time;
+        return LocalDateTime.of(localDate, localTime);
     }
 }
