@@ -12,10 +12,10 @@ import java.util.regex.Pattern;
 
 public class ReportGenerator {
 
-    private static double globalTime = 0;         // Общее время звонков за тарифный период в секундах
-    private static double totalPrice;             // Общая стоимость звонков за тарифный период
-
     public static void generate(List<String> data, String phoneNumber) throws IOException {
+        double totalPrice = 0;
+        // Общее время звонков за тарифный период в секундах
+        double globalTime = 0;
 
         // Получение данных определённого абонента
         ArrayList<String> matches = new ArrayList<>();
@@ -65,19 +65,19 @@ public class ReportGenerator {
 
             if (tariff.equals("06")) {
                 // Если потрачено менее 300 минут
-                if (globalTime/60 <= 300) {
+                if (globalTime /60 <= 300) {
                     price = 0;
                     totalPrice = 100;
                 }
 
                 // Если звонок происходит после израсходования 300 минут
-                if (globalTime/60 > 300) {
+                if (globalTime /60 > 300) {
                     price = (double) duration/60;
                     totalPrice += price;
                 }
 
                 // Если во время данного звонка был преодалён порог в 300 минут
-                if ((globalTime - duration)/60 <= 300 && globalTime/60 > 300) {
+                if ((globalTime - duration)/60 <= 300 && globalTime /60 > 300) {
                     price = (globalTime / 60) - 300;
                     totalPrice = (double) 100 + price;
                 }
@@ -93,7 +93,7 @@ public class ReportGenerator {
                     globalTime -= duration;
                     price = 0;
                 } else {
-                    if (globalTime/60 <= 100) {
+                    if (globalTime /60 <= 100) {
                         price = (double) duration/60 * 0.5;
                     } else {
                         price = (double) duration/60 * 1;
@@ -111,7 +111,7 @@ public class ReportGenerator {
         writer.close();
     }
 
-    private static String[] stringToArrayOfStrings(ArrayList<String> array, int index) {
+    public static String[] stringToArrayOfStrings(ArrayList<String> array, int index) {
         // Разбиваю строку на массив элементов
         String[] elements = array.get(index).split("\\s+");
         // Убираем знаки препинания
