@@ -14,9 +14,8 @@ import java.util.regex.Pattern;
 public class ReportGenerator {
 
     public static void generate(List<String> data, String phoneNumber) throws IOException {
-        double totalPrice = 0;
-        // Общее время звонков за тарифный период в секундах
-        double globalTime = 0;
+        double totalPrice = 0;    // Общая цена всех звонков
+        double globalTime = 0;    // Общее время звонков за тарифный период в секундах
 
         // Получение данных определённого абонента
         ArrayList<String> matches = new ArrayList<>();
@@ -28,6 +27,7 @@ public class ReportGenerator {
             }
         }
 
+        // Сортировка вывода данных в календарном порядке
         swapTimeAndCallType(matches);
         Collections.sort(matches);
 
@@ -35,13 +35,13 @@ public class ReportGenerator {
         String tariff = stringToArrayOfStrings(matches, 0)[4];
 
         // Начало создания файла отчёта
-            PrintWriter writer = new PrintWriter("./reports/" + phoneNumber + ".txt", StandardCharsets.UTF_8);
-            writer.println("Tariff index: " + tariff);
-            writer.println("----------------------------------------------------------------------------");
-            writer.println("Report for phone number " + phoneNumber + ":");
-            writer.println("----------------------------------------------------------------------------");
-            writer.println("| Call Type |   Start Time        |     End Time        | Duration | Cost  |");
-            writer.println("----------------------------------------------------------------------------");
+        PrintWriter writer = new PrintWriter("./reports/" + phoneNumber + ".txt", StandardCharsets.UTF_8);
+        writer.println("Tariff index: " + tariff);
+        writer.println("----------------------------------------------------------------------------");
+        writer.println("Report for phone number " + phoneNumber + ":");
+        writer.println("----------------------------------------------------------------------------");
+        writer.println("| Call Type |   Start Time        |     End Time        | Duration | Cost  |");
+        writer.println("----------------------------------------------------------------------------");
 
 
 
@@ -116,9 +116,9 @@ public class ReportGenerator {
     }
 
     public static String[] stringToArrayOfStrings(ArrayList<String> array, int index) {
-        // Разбиваю строку на массив элементов
+        // Разбивает строку на массив элементов
         String[] elements = array.get(index).split("\\s+");
-        // Убираем знаки препинания
+        // Убирает знаки препинания
         for (int j = 0; j < elements.length; j++) {
             elements[j] = elements[j].replaceAll("\\W", "");
         }
@@ -142,7 +142,6 @@ public class ReportGenerator {
             sb.insert(0, startTime);
             sb.insert(29, callType);
             array.set(i, sb.toString());
-            System.out.println(array.get(i));
         }
     }
 }
