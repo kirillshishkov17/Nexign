@@ -6,8 +6,15 @@ import java.util.Set;
 
 public class Main {
     public static void main(String[] args) {
-        // Читает данные из файла и записываем в List
-        ArrayList<String> data = ReadDataToArray.readData("src/main/resources/cdr.txt");
+        ArrayList<String> data;
+
+        // Читаем данные из файла и записываем в List
+        try {
+            data = Utils.readData("src/main/resources/cdr.txt");
+        } catch (IOException e) {
+            System.out.println("Ошибка чтения файла cdr.txt");
+            throw new RuntimeException(e);
+        }
 
         // Создаёт папку reports
         File reportsDir = new File("reports");
