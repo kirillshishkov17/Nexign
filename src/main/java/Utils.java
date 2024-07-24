@@ -1,5 +1,6 @@
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -44,9 +45,9 @@ public class Utils {
         return set;
     }
 
-    public static void generateReport(List<CallDataRecord> callDataRecords) {
+    public static void generateReport(Path reportsDir, List<CallDataRecord> callDataRecords) {
         var phoneNumber = callDataRecords.get(0).getPhoneNumber();
-        try(Writer printWriter = new FileWriter("src/main/resources/reports/" + phoneNumber + ".txt", StandardCharsets.UTF_8, true);
+        try(Writer printWriter = new FileWriter(reportsDir + "/" + phoneNumber + ".txt", StandardCharsets.UTF_8, true);
             BufferedWriter writer = new BufferedWriter(printWriter)
         ) {
             double totalPrice = 0;    // Общая цена всех звонков

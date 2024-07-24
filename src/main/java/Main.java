@@ -11,7 +11,7 @@ public class Main {
     public static void main(String[] args) {
         try {
             // создаёт папку reports
-            Path reportsDir = Paths.get("src/main/resources/reports");
+            Path reportsDir = Paths.get("reports");
             if (Files.notExists(reportsDir)) {
                 Files.createDirectories(reportsDir);
             }
@@ -29,7 +29,7 @@ public class Main {
                         .sorted(Comparator.comparing(CallDataRecord::getStartTime))
                         .collect(Collectors.toList());
 
-                Utils.generateReport(filteredRecords);
+                Utils.generateReport(reportsDir, filteredRecords);
             }
         } catch (IOException e) {
             e.printStackTrace(System.out);
