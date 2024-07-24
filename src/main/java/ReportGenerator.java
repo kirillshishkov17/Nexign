@@ -35,7 +35,7 @@ public class ReportGenerator {
         String tariff = stringToArrayOfStrings(matches, 0)[4];
 
         // Начало создания файла отчёта
-        PrintWriter writer = new PrintWriter("./reports/" + phoneNumber + ".txt", StandardCharsets.UTF_8);
+        PrintWriter writer = new PrintWriter("src/main/resources/reports/" + phoneNumber + ".txt", StandardCharsets.UTF_8);
         writer.println("Tariff index: " + tariff);
         writer.println("----------------------------------------------------------------------------");
         writer.println("Report for phone number " + phoneNumber + ":");
@@ -115,7 +115,7 @@ public class ReportGenerator {
         writer.close();
     }
 
-    public static String[] stringToArrayOfStrings(ArrayList<String> array, int index) {
+    public static String[] stringToArrayOfStrings(List<String> array, int index) {
         // Разбивает строку на массив элементов
         String[] elements = array.get(index).split("\\s+");
         // Убирает знаки препинания
