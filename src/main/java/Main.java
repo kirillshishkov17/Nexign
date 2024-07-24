@@ -2,8 +2,10 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class Main {
     public static void main(String[] args) {
@@ -20,13 +22,14 @@ public class Main {
             // получает набор уникальных номеров телефонов
             Set<String> uniqPhoneNumbers = Utils.getUniqPhoneNumbers(callDataRecords);
 
-            //todo Удалить. Работает с массивом строк. Новая реализация работает с объектами
-            List<String> data = Utils.readData("src/main/resources/cdr.txt");
+            // генерирует отчёт по каждому номеру телефона
+            for (var number : uniqPhoneNumbers) {
+                List<CallDataRecord> filteredRecords = callDataRecords.stream()
+                        .filter(record -> record.getPhoneNumber().equals(number))
+                        .sorted(Comparator.comparing(CallDataRecord::getStartTime))
+                        .collect(Collectors.toList());
 
-            // Находит совпадения по номеру телефона и генерирует отчёт
-            //todo Переработать метод
-            for (String number : uniqPhoneNumbers) {
-                ReportGenerator.generate(data, number);
+                Utils.generateReport(filteredRecords);
             }
         } catch (IOException e) {
             e.printStackTrace(System.out);
