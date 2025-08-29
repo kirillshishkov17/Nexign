@@ -1,7 +1,9 @@
+package Entity;
+
 public enum TariffType {
     UNLIMITED("06"), PER_MINUTE("03"), COMMON("11");
 
-    final String code;
+    public final String code;
 
     TariffType(String code) {
         this.code = code;

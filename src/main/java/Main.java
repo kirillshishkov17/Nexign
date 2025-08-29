@@ -1,3 +1,5 @@
+import Entity.CallDataRecord;
+
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -16,17 +18,17 @@ public class Main {
                 Files.createDirectories(reportsDir);
             }
 
-            // читает данные и маппит в массив объектов
-            List<CallDataRecord> callDataRecords = Utils.parseData("src/main/resources/cdr.txt");
+            // читает данные в массив объектов
+            var parsedData = Utils.parseFile("src/main/resources/cdr.txt");
 
             // получает набор уникальных номеров телефонов
-            Set<String> uniqPhoneNumbers = Utils.getUniqPhoneNumbers(callDataRecords);
+            Set<String> uniquePhoneNumbers = parsedData.uniqueNumbers();
 
             // генерирует отчёт по каждому номеру телефона
-            for (var number : uniqPhoneNumbers) {
-                List<CallDataRecord> filteredRecords = callDataRecords.stream()
-                        .filter(record -> record.getPhoneNumber().equals(number))
-                        .sorted(Comparator.comparing(CallDataRecord::getStartTime))
+            for (var number : uniquePhoneNumbers) {
+                List<CallDataRecord> filteredRecords = parsedData.callDataRecords().stream()
+                        .filter(record -> record.phoneNumber().equals(number))
+                        .sorted(Comparator.comparing(CallDataRecord::startTime))
                         .collect(Collectors.toList());
 
                 Utils.generateReport(reportsDir, filteredRecords);
