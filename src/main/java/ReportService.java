@@ -28,6 +28,7 @@ public class ReportService {
             var tariffType = TariffType.fromCode(parts[4]);
             callDataRecords.add(new CallDataRecord(callType, phoneNumber, startTime, stopTime, tariffType));
         }
+        reader.close();
         return callDataRecords;
     }
 
@@ -37,15 +38,15 @@ public class ReportService {
         for (CallDataRecord call : callDataRecords) {
             var subscriber = subscribers.get(call.phoneNumber());
             var callInfo = calcCostAndDuration(call, subscriber);
-            BufferedWriter writer;
+            PrintWriter writer;
 
             if (subscriber != null) {
-                writer = subscriber.getBufferedWriter();
+                writer = subscriber.getPrintWriter();
                 writeLine(writer, call, callInfo.duration(), callInfo.cost());
                 subscriber.setTotalCost(subscriber.getTotalCost() + callInfo.cost());
                 subscriber.setTotalTime(subscriber.getTotalTime() + callInfo.duration());
             } else {
-                writer = new BufferedWriter(new FileWriter(reportsDir + "/" + call.phoneNumber() + ".txt", StandardCharsets.UTF_8, true));
+                writer = new PrintWriter(new BufferedWriter(new FileWriter(reportsDir + "/" + call.phoneNumber() + ".txt", StandardCharsets.UTF_8, true)));
                 writeReportHeader(writer, call);
                 writeLine(writer, call, callInfo.duration(), callInfo.cost());
                 subscribers.put(call.phoneNumber(), new Subscriber(callInfo.cost(), callInfo.duration(), writer));
@@ -53,7 +54,7 @@ public class ReportService {
         }
 
         for (Map.Entry<String, Subscriber> data : subscribers.entrySet()) {
-            var writer = data.getValue().getBufferedWriter();
+            var writer = data.getValue().getPrintWriter();
             var totalCost = data.getValue().getTotalCost();
             writeReportFooter(writer, totalCost);
             writer.close();
@@ -94,23 +95,23 @@ public class ReportService {
         return new CallInfoDto(cost, durationSec);
     }
 
-    private static void writeReportHeader(BufferedWriter writer, CallDataRecord callDataRecord) throws IOException {
-        writer.write("Tariff index: " + callDataRecord.tariffType().code + "\n");
-        writer.write("----------------------------------------------------------------------------\n");
-        writer.write("Report for phone number " + callDataRecord.phoneNumber() + ":\n");
-        writer.write("----------------------------------------------------------------------------\n");
-        writer.write("| Call Type |     Start Time      |     End Time        | Duration | Cost  |\n");
-        writer.write("----------------------------------------------------------------------------\n");
+    private static void writeReportHeader(PrintWriter writer, CallDataRecord callDataRecord) {
+        writer.println("Tariff index: " + callDataRecord.tariffType().code);
+        writer.println("----------------------------------------------------------------------------");
+        writer.println("Report for phone number " + callDataRecord.phoneNumber());
+        writer.println("----------------------------------------------------------------------------");
+        writer.println("| Call Type |     Start Time      |     End Time        | Duration |  Cost |");
+        writer.println("----------------------------------------------------------------------------");
     }
 
-    private static void writeLine(BufferedWriter writer, CallDataRecord callDataRecord, long duration, double price) throws IOException {
+    private static void writeLine(PrintWriter writer, CallDataRecord callDataRecord, long duration, double price) {
         var formattedDuration = String.format("%02d:%02d:%02d", duration / 3600, duration / 60 % 60, duration % 60);
-        writer.write("|     " + callDataRecord.callType().code + "    | " + callDataRecord.startTime().format(DATE_REPORT_FORMATTER) + " | " + callDataRecord.stopTime().format(DATE_REPORT_FORMATTER) + " | " + formattedDuration + " |  " + String.format("%(.2f", price).replace(",", ".") + " |\n");
-        writer.write("----------------------------------------------------------------------------\n");
+        writer.printf("|    %-6s | %19s | %19s | %8s |%6.2f |\n", callDataRecord.callType().code, callDataRecord.startTime().format(DATE_REPORT_FORMATTER), callDataRecord.stopTime().format(DATE_REPORT_FORMATTER), formattedDuration, price);
+        writer.println("----------------------------------------------------------------------------");
     }
 
-    private static void writeReportFooter(BufferedWriter writer, double totalPrice) throws IOException {
-        writer.write("|                                           Total Cost: |     " + String.format("%(.2f", totalPrice).replace(",", ".") + " rubles |\n");
-        writer.write("----------------------------------------------------------------------------\n");
+    private static void writeReportFooter(PrintWriter writer, double totalPrice) {
+        writer.printf("| %57s | %10s |\n", "Total Cost:", String.format("%(.2f rubles", totalPrice));
+        writer.println("----------------------------------------------------------------------------");
     }
 }

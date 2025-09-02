@@ -1,6 +1,6 @@
 package Entity;
 
-import java.io.BufferedWriter;
+import java.io.PrintWriter;
 
 /**
  * Информация об абоненте
@@ -8,12 +8,12 @@ import java.io.BufferedWriter;
 public class Subscriber {
     private double totalCost;
     private double totalTime;
-    private final BufferedWriter bufferedWriter;
+    private final PrintWriter printWriter;
 
-    public Subscriber(double totalCost, double totalTime, BufferedWriter bufferedWriter) {
+    public Subscriber(double totalCost, double totalTime, PrintWriter printWriter) {
         this.totalCost = totalCost;
         this.totalTime = totalTime;
-        this.bufferedWriter = bufferedWriter;
+        this.printWriter = printWriter;
     }
 
     public double getTotalCost() {
@@ -32,7 +32,7 @@ public class Subscriber {
         this.totalTime = totalTime;
     }
 
-    public BufferedWriter getBufferedWriter() {
-        return bufferedWriter;
+    public PrintWriter getPrintWriter() {
+        return printWriter;
     }
 }
