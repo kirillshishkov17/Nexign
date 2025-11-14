@@ -10,6 +10,7 @@ public class Main {
             var callDataRecords = ReportService.parseFile("src/main/resources/cdr.txt");
             ReportService.generate(reportsDir, callDataRecords);
         } catch (IOException e) {
+            System.out.println("Hello world!");
             //todo обработать исключение
         }
     }
