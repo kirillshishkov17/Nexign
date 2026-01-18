@@ -2,7 +2,9 @@ import Entity.*;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -15,49 +17,58 @@ public class ReportService {
     private static final DateTimeFormatter DATE_PARSE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
     private static final DateTimeFormatter DATE_REPORT_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-    public static List<CallDataRecord> parseFile(String file) throws IOException {
+    public static List<CallDataRecord> parseFile(Path filePath) throws IOException {
         List<CallDataRecord> callDataRecords = new ArrayList<>();
-        var reader = new BufferedReader(new FileReader(file));
-        String line;
-        while ((line = reader.readLine()) != null) {
-            String[] parts = line.split(",\\s*");
-            var callType = CallType.fromCode(parts[0]);
-            var phoneNumber = parts[1];
-            var startTime = LocalDateTime.parse(parts[2], DATE_PARSE_FORMATTER);
-            var stopTime = LocalDateTime.parse(parts[3], DATE_PARSE_FORMATTER);
-            var tariffType = TariffType.fromCode(parts[4]);
-            callDataRecords.add(new CallDataRecord(callType, phoneNumber, startTime, stopTime, tariffType));
+
+        try (var reader = Files.newBufferedReader(filePath, StandardCharsets.UTF_8)) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(",\\s*");
+                var callType = CallType.fromCode(parts[0]);
+                var phoneNumber = parts[1];
+                var startTime = LocalDateTime.parse(parts[2], DATE_PARSE_FORMATTER);
+                var stopTime = LocalDateTime.parse(parts[3], DATE_PARSE_FORMATTER);
+                var tariffType = TariffType.fromCode(parts[4]);
+                callDataRecords.add(new CallDataRecord(callType, phoneNumber, startTime, stopTime, tariffType));
+            }
         }
-        reader.close();
+
         return callDataRecords;
     }
 
     public static void generate(Path reportsDir, List<CallDataRecord> callDataRecords) throws IOException {
         Map<String, Subscriber> subscribers = new HashMap<>();
 
-        for (CallDataRecord call : callDataRecords) {
-            var subscriber = subscribers.get(call.phoneNumber());
-            var callInfo = calcCostAndDuration(call, subscriber);
-            PrintWriter writer;
+        try {
+            for (CallDataRecord call : callDataRecords) {
+                var subscriber = subscribers.get(call.phoneNumber());
+                var callInfo = calcCostAndDuration(call, subscriber);
+                PrintWriter writer;
 
-            if (subscriber != null) {
-                writer = subscriber.getPrintWriter();
-                writeLine(writer, call, callInfo.duration(), callInfo.cost());
-                subscriber.setTotalCost(subscriber.getTotalCost() + callInfo.cost());
-                subscriber.setTotalTime(subscriber.getTotalTime() + callInfo.duration());
-            } else {
-                writer = new PrintWriter(new BufferedWriter(new FileWriter(reportsDir + "/" + call.phoneNumber() + ".txt", StandardCharsets.UTF_8, true)));
-                writeReportHeader(writer, call);
-                writeLine(writer, call, callInfo.duration(), callInfo.cost());
-                subscribers.put(call.phoneNumber(), new Subscriber(callInfo.cost(), callInfo.duration(), writer));
+                if (subscriber != null) {
+                    writer = subscriber.getPrintWriter();
+                    writeLine(writer, call, callInfo.duration(), callInfo.cost());
+                    subscriber.setTotalCost(subscriber.getTotalCost() + callInfo.cost());
+                    subscriber.setTotalTime(subscriber.getTotalTime() + callInfo.duration());
+                } else {
+                    writer = new PrintWriter(
+                        Files.newBufferedWriter(reportsDir.resolve(call.phoneNumber() + ".txt"),
+                        StandardCharsets.UTF_8,
+                        StandardOpenOption.CREATE,
+                        StandardOpenOption.WRITE)
+                    );
+                    writeReportHeader(writer, call);
+                    writeLine(writer, call, callInfo.duration(), callInfo.cost());
+                    subscribers.put(call.phoneNumber(), new Subscriber(callInfo.cost(), callInfo.duration(), writer));
+                }
             }
-        }
-
-        for (Map.Entry<String, Subscriber> data : subscribers.entrySet()) {
-            var writer = data.getValue().getPrintWriter();
-            var totalCost = data.getValue().getTotalCost();
-            writeReportFooter(writer, totalCost);
-            writer.close();
+        } finally {
+            for (Subscriber subscriber : subscribers.values()) {
+                var writer = subscriber.getPrintWriter();
+                var totalCost = subscriber.getTotalCost();
+                writeReportFooter(writer, totalCost);
+                writer.close();
+            }
         }
     }
 
